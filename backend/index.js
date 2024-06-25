@@ -9,8 +9,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const authRoutes = require('./routes/authRoutes');
+const recipeRoutes = require('./routes/recipeRoutes');
 
 app.use('/api/auth' , authRoutes);
+app.use('/api/recipes', recipeRoutes);
 
 app.listen(process.env.PORT, async() => {
     await dbConnection.connect();
