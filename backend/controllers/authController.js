@@ -66,7 +66,7 @@ exports.postRegister = async (req, res) => {
 };
 
 exports.getProfile = async (req, res) => {
-    decodedToken = req.user;
+    const decodedToken = req.user;
     try {
         const user = await User.findOne({ email: decodedToken.userMail }).select('-password -_id -__v');
         if (!user) {
@@ -79,4 +79,3 @@ exports.getProfile = async (req, res) => {
         return res.status(500).json({ message: 'Server error, please try again later.' });
     }
 };
-

@@ -57,6 +57,7 @@ exports.updateRecipe = async (req, res) => {
 
         return res.status(200).json({ message: 'Recipe updated successfully', recipe: updatedRecipe });
     } catch (error) {
+        console.error('Error updating recipe:', error);
         return res.status(500).json({ message: 'An error occurred while updating the recipe' });
     }
 };
@@ -70,7 +71,6 @@ exports.deleteRecipe = async (req, res) => {
     }
 
     try {
-
         user = await User.findOne({ email: user.userMail });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -78,21 +78,20 @@ exports.deleteRecipe = async (req, res) => {
 
         user.recipes = user.recipes.filter(recipe => recipe._id.toString() !== id);
         await user.save();
-        const deletedRecipe = await Recipe.findByIdAndDelete(id);
 
+        const deletedRecipe = await Recipe.findByIdAndDelete(id);
         if (!deletedRecipe) {
             return res.status(404).json({ message: 'Recipe not found' });
         }
 
-        res.status(200).json({ message: 'Recipe deleted successfully' });
+        return res.status(200).json({ message: 'Recipe deleted successfully' });
     } catch (error) {
         console.error('Error deleting recipe:', error);
-        res.status(500).json({ message: 'An error occurred while deleting the recipe' });
+        return res.status(500).json({ message: 'An error occurred while deleting the recipe' });
     }
 };
 
 exports.addFavorite = async (req, res) => {
-
     const { id } = req.params;
     let user = req.user;
 
@@ -114,36 +113,40 @@ exports.addFavorite = async (req, res) => {
         user.favorites.push(recipe);
         await user.save();
         return res.status(200).json({ message: 'Recipe added to favorites successfully' });
-
     } catch (error) {
+        console.error('Error adding recipe to favorites:', error);
         return res.status(500).json({ message: 'An error occurred while adding the recipe to favorites' });
     }
-
 };
 
 exports.deleteFavorite = async (req, res) => {
     const { id } = req.params;
     let user = req.user;
 
-    try {
-        if (!user) {
-            return res.status(401).json({ message: 'Unauthorized' });
-        }
+    if (!user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
 
+    try {
         user = await User.findOne({ email: user.userMail });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
+        const initialFavoriteCount = user.favorites.length;
         user.favorites = user.favorites.filter(recipe => recipe._id.toString() !== id);
+
+        if (user.favorites.length === initialFavoriteCount) {
+            return res.status(404).json({ message: 'Recipe not found in favorites' });
+        }
+
         await user.save();
 
         return res.status(200).json({ message: 'Recipe removed from favorites successfully' });
-
     } catch (error) {
-        res.status(500).json({ message: 'An error occurred while removing the recipe from favorites' });
+        console.error('Error removing recipe from favorites:', error);
+        return res.status(500).json({ message: 'An error occurred while removing the recipe from favorites' });
     }
-
 };
 
 exports.getAllFavorites = async (req, res) => {
@@ -161,8 +164,8 @@ exports.getAllFavorites = async (req, res) => {
 
         const favorites = user.favorites;
         return res.status(200).json({ favorites });
-
     } catch (error) {
+        console.error('Error fetching favorites:', error);
         return res.status(500).json({ message: 'An error occurred while fetching the favorites' });
     }
 };
